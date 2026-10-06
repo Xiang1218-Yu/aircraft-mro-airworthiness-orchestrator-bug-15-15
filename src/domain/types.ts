@@ -125,6 +125,16 @@ export interface OutboxMessage {
   payload: string;
   status: 'PENDING' | 'PUBLISHED' | 'FAILED';
   createdAt: string;
+  /** Current lease holder (consumer instance id); undefined only when no lease is held. */
+  leaseOwner?: string;
+  /** ISO timestamp until which the lease is valid; undefined only when no lease is held. */
+  leaseUntil?: string;
+  /** Monotonic version bumped on every claim/renew/state transition; used for optimistic lease checks. */
+  version: number;
+  /** Number of failed publish attempts so far. */
+  attempts: number;
+  /** Owner that successfully published the message; used for idempotent repeat confirms. */
+  publishedBy?: string;
 }
 
 export interface AuditRecord {
@@ -153,3 +163,7 @@ export interface OutboxLease {
   leaseUntil: string;
   version: number;
 }
+
+export type OutboxConfirmResult =
+  | { outcome: 'PUBLISHED'; messageId: string; version: number }
+  | { outcome: 'ALREADY_PUBLISHED'; messageId: string; version: number };
