@@ -124,6 +124,17 @@ export interface OutboxMessage {
   aggregateId: string;
   payload: string;
   status: 'PENDING' | 'PUBLISHED' | 'FAILED';
+  /** Number of claim/delivery attempts so far. */
+  attempts: number;
+  /** Current lease holder; null when no lease is held (never claimed, released after failure, or settled). */
+  leaseOwner: string | null;
+  /** Lease expiry; a message becomes reclaimable only once this instant has passed. */
+  leaseUntil: string | null;
+  /** Optimistic-concurrency / fencing version, bumped on every lease or status mutation. */
+  version: number;
+  publishedAt: string | null;
+  failedAt: string | null;
+  lastError: string | null;
   createdAt: string;
 }
 
@@ -147,6 +158,11 @@ export interface LedgerEntry {
   createdAt: string;
 }
 
+/**
+ * Fencing token handed to a consumer when it claims a message. The token is immutable;
+ * renew() returns a fresh token with the bumped version. The version must be presented
+ * to renew/confirm/fail so stale holders are fenced off after a lease timeout re-claim.
+ */
 export interface OutboxLease {
   messageId: string;
   owner: string;

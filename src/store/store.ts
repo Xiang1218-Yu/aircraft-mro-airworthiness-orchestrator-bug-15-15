@@ -57,7 +57,22 @@ export class Store {
   }
 
   addOutbox(tenantId: string, topic: string, aggregateId: string, payload: unknown): void {
-    this.outbox.push({ id: this.nextId('outbox'), tenantId, topic, aggregateId, payload: JSON.stringify(payload), status: 'PENDING', createdAt: this.now() });
+    this.outbox.push({
+      id: this.nextId('outbox'),
+      tenantId,
+      topic,
+      aggregateId,
+      payload: JSON.stringify(payload),
+      status: 'PENDING',
+      attempts: 0,
+      leaseOwner: null,
+      leaseUntil: null,
+      version: 0,
+      publishedAt: null,
+      failedAt: null,
+      lastError: null,
+      createdAt: this.now(),
+    });
   }
 
   addLedger(entry: Omit<LedgerEntry, 'id' | 'createdAt'>): void {
